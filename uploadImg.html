@@ -1,0 +1,78 @@
+<div name="uploadimage">
+<div>
+    <input type="text" size="20" name="upfile" id="upfile" style="display: none">
+    <style>
+        .aa button{margin-left: 10px; margin-top: 5px;display:inline-block; width:100px; height:40px;  position:relative; overflow:hidden;}
+        .aa input{width:100px; height:38px; position:absolute; right:0; top:0; font-size:100px; opacity:0; filter:alpha(opacity=0);}
+    </style>
+    <div class="aa">
+        <button class="btn btn-positive" >
+            <input class="imgfileObjClass" id="imgfileObj" type="file" multiple accept="image/jpg, image/jpeg, image/png">
+            上传文件
+        </button>
+    </div>
+    <script type="text/javascript">
+        var uploadImgArr = [];
+        var imgfileObj = $("#imgfileObj").change(function(){
+            upfile.value=this.value
+            var files = this.files;
+            imageBox = $("#img")
+            for(var i=0;i<files.length;i++){
+                f = files[i];
+                uploadImgArr.push(f);
+                var reader = new FileReader();
+                reader.onload = (function(file) {
+                    //获取图片相关的信息
+                    var fileSize = (file.size / 1024).toFixed(2) + "K",
+                            fileName = file.name,
+                            fileType = file.type;
+                    stratUpload();
+                    return function(e) {
+                        //console.log(e.target)
+                        //获取图片的宽高
+                        var img = new Image();
+                        img.addEventListener("load", imgLoaded, false);
+                        img.src = e.target.result;
+                        function imgLoaded() {
+                            imgWidth = img.width;
+                            imgHeight = img.height;
+                            //图片加载完成后才能获取imgWidth和imgHeight
+                            imageBox.html("<img style='width:50%;height:50%;' src='" + e.target.result + "' alt='" + fileName + "' title='" + fileName + "'>")
+                        }
+                    }
+                })(f);
+                //读取文件内容
+                reader.readAsDataURL(f);
+            }
+        });
+
+        function stratUpload(){
+            //console.log(uploadImgArr)
+            var i=0;
+            if(uploadImgArr.length>0){
+                uploadImg = uploadImgArr[0];
+                var xmlAjax = new XMLHttpRequest();
+                if (xmlAjax.upload){
+                    var formdata = new FormData();
+                    formdata.append("FileData", uploadImg);
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ settings['mobileServerUrl'] }}/m/{{ suid }}/pic/upload",
+                        data: formdata,
+                        /*以下两个属性必须要加上，否则jquery会对formdata进行非原生处理*/
+                        processData: false,
+                        contentType: false,
+                        dataType: "json",
+                        success: function(data){
+                            $("#imageUrl").val(data.imageUrl);
+                        }
+                    })
+                }
+            }
+        }
+    </script>
+</div>
+<div id="img"  align="center">
+</div>
+</div>
+{#<div> <a href="javascript:;" id="btnUpload" onclick="stratUpload()">开始上传</a></div>#}
